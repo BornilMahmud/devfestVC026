@@ -16,7 +16,6 @@ import { t } from './utils/translations';
 
 // Components
 import { TopNav, NavTab } from './components/TopNav';
-import { PackageScene3D } from './components/PackageScene3D';
 import { ReadinessHeader } from './components/ReadinessHeader';
 import { ChecklistTable } from './components/ChecklistTable';
 import { DocumentInspector } from './components/DocumentInspector';
@@ -25,29 +24,33 @@ import { IssueCenter } from './components/IssueCenter';
 import { PackagePreviewView } from './components/PackagePreviewView';
 import { LordIcon } from './components/LordIcon';
 import {
-  AlertTriangle,
-  FileText,
-  Calendar,
-  Building2,
-  ArrowRight,
-  ShieldCheck,
+  Download,
   CheckCircle2,
+  X,
+  FileCheck,
+  ShieldCheck,
+  ArrowRight,
 } from 'lucide-react';
 
 export function App() {
   const [lang, setLang] = useState<Language>('en');
-  const [activeTab, setActiveTab] = useState<NavTab>('overview');
+  const [activeTab, setActiveTab] = useState<NavTab>('documents');
   const [tender, setTender] = useState<TenderMetadata>(sampleRequirements.tender);
   const [requirements, setRequirements] = useState<DocumentRequirement[]>(sampleRequirements.requirements);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [matches, setMatches] = useState<DocumentMatch[]>([]);
   const [selectedReqId, setSelectedReqId] = useState<string | null>(null);
 
-  // PDF Generation State
+  // PDF Generation State & Modal
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationStep, setGenerationStep] = useState('');
-  const [notification, setNotification] = useState<string | null>(null);
+  const [generatedResult, setGeneratedResult] = useState<{
+    blob: Blob;
+    filename: string;
+    totalPages: number;
+  } | null>(null);
 
+  const [notification, setNotification] = useState<string | null>(null);
   const jsonInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-clear notification after 4 seconds
@@ -198,15 +201,17 @@ export function App() {
     setNotification('Loaded official sample tender T-2026-0417.');
   };
 
-  // Handler: Final Package Generation (Subtle, dignified, zero confetti)
+  // Handler: Final Package Generation with Elegant Modal
   const handleGeneratePackage = async () => {
     if (!readiness.isReady) {
+      setActiveTab('validation');
       setNotification('Cannot generate package: Blocking issues exist.');
       return;
     }
 
     setIsGenerating(true);
-    setGenerationStep('Starting document compilation...');
+    setGenerationStep('Validating source documents...');
+    setGeneratedResult(null);
 
     try {
       const result = await generateTenderPackagePDF(
@@ -216,6 +221,8 @@ export function App() {
         (prog) => setGenerationStep(prog.step)
       );
 
+      setGeneratedResult(result);
+      // Auto-trigger browser download
       triggerBrowserDownload(result.blob, result.filename);
       setNotification(`Tender Package created successfully (${result.totalPages} pages).`);
     } catch (err: any) {
@@ -223,7 +230,6 @@ export function App() {
       setNotification(`Failed to generate package: ${err?.message || 'Unknown error'}`);
     } finally {
       setIsGenerating(false);
-      setGenerationStep('');
     }
   };
 
@@ -233,8 +239,10 @@ export function App() {
     setActiveTab('documents');
   };
 
+  const totalIncludedDocs = validations.filter((v) => v.matchedFile).length;
+
   return (
-    <div className="min-h-screen bg-[#070b14] text-slate-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-black">
+    <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
       {/* Hidden file input for custom JSON */}
       <input
         ref={jsonInputRef}
@@ -244,7 +252,7 @@ export function App() {
         className="hidden"
       />
 
-      {/* Top Navigation with Primary View Tabs */}
+      {/* Top Navigation */}
       <TopNav
         tender={tender}
         lang={lang}
@@ -256,117 +264,35 @@ export function App() {
         onLoadSampleTender={handleLoadSample}
       />
 
-      {/* Toast Notification Banner (Dignified enterprise badge, no bounce) */}
+      {/* Toast Notification Banner */}
       {notification && (
-        <div className="fixed bottom-5 right-5 z-50 bg-slate-900 border border-slate-700 text-slate-200 px-4 py-2.5 rounded-lg shadow-2xl text-xs font-mono flex items-center space-x-2 transition-opacity">
-          <span className="w-2 h-2 rounded-full bg-cyan-400" />
+        <div className="fixed bottom-5 right-5 z-50 bg-slate-900 border border-slate-700 text-slate-200 px-4 py-2.5 rounded-lg shadow-xl text-xs font-mono flex items-center space-x-2">
+          <span className="w-2 h-2 rounded-full bg-blue-400" />
           <span>{notification}</span>
         </div>
       )}
 
       {/* Main Workspace Body */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
-        {/* Readiness Meter & Action Command Center */}
+        {/* Main Summary & Preflight Compliance Header */}
         <ReadinessHeader
+          tender={tender}
+          validations={validations}
           readiness={readiness}
           lang={lang}
           onGenerate={handleGeneratePackage}
           onAutoMatch={handleAutoMatch}
           onExportCSV={handleExportCSV}
           onSaveWorkspace={handleSaveWorkspace}
+          onReviewIssues={() => setActiveTab('validation')}
           isGenerating={isGenerating}
           generationStep={generationStep}
         />
 
-        {/* Tab 1: OVERVIEW (3D Digital Twin Centerpiece & High-level Status) */}
-        {activeTab === 'overview' && (
-          <div className="space-y-6">
-            {/* 3D Package Assembly Workspace */}
-            <section aria-label="3D Package Assembly">
-              <PackageScene3D
-                validations={validations}
-                selectedReqId={selectedReqId}
-                onSelectReq={(id) => setSelectedReqId(id)}
-                lang={lang}
-                isReady={readiness.isReady}
-              />
-            </section>
-
-            {/* Procurement Status Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 space-y-2">
-                <div className="flex items-center justify-between text-xs font-mono text-slate-400">
-                  <span>DOCUMENT INVENTORY</span>
-                  <FileText className="w-4 h-4 text-cyan-400" />
-                </div>
-                <div className="text-2xl font-bold font-mono text-slate-100">
-                  {validations.filter((v) => v.matchedFile).length} / {validations.length}
-                </div>
-                <p className="text-xs text-slate-400">
-                  {readiness.readyCount} of {readiness.mandatoryCount} mandatory documents attached.
-                </p>
-                <button
-                  onClick={() => setActiveTab('documents')}
-                  className="mt-2 text-xs font-mono text-cyan-400 hover:text-cyan-300 flex items-center space-x-1"
-                >
-                  <span>Open Documents Checklist</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 space-y-2">
-                <div className="flex items-center justify-between text-xs font-mono text-slate-400">
-                  <span>STATUTORY VALIDATION</span>
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                </div>
-                <div className="text-2xl font-bold font-mono">
-                  {readiness.blockers.length === 0 ? (
-                    <span className="text-emerald-400">0 Blockers</span>
-                  ) : (
-                    <span className="text-amber-400">{readiness.blockers.length} Blockers</span>
-                  )}
-                </div>
-                <p className="text-xs text-slate-400">
-                  {readiness.isReady
-                    ? 'All requirements satisfied through deadline.'
-                    : 'Action required before package can be generated.'}
-                </p>
-                <button
-                  onClick={() => setActiveTab('validation')}
-                  className="mt-2 text-xs font-mono text-cyan-400 hover:text-cyan-300 flex items-center space-x-1"
-                >
-                  <span>Open Issue Center</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 space-y-2">
-                <div className="flex items-center justify-between text-xs font-mono text-slate-400">
-                  <span>PACKAGE COMPILATION</span>
-                  <Building2 className="w-4 h-4 text-purple-400" />
-                </div>
-                <div className="text-2xl font-bold font-mono text-slate-100">
-                  {tender.tender_id}
-                </div>
-                <p className="text-xs text-slate-400">
-                  Submission Deadline: <span className="text-amber-400 font-semibold">{tender.submission_deadline}</span>
-                </p>
-                <button
-                  onClick={() => setActiveTab('package')}
-                  className="mt-2 text-xs font-mono text-cyan-400 hover:text-cyan-300 flex items-center space-x-1"
-                >
-                  <span>Inspect Manifest & Preview</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Tab 2: DOCUMENTS (Checklist Table + File Uploader + Document Inspector) */}
+        {/* Tab 1: DOCUMENTS WORKSPACE (Main Working Area: Checklist + Ingestion + Inspector) */}
         {activeTab === 'documents' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left Column (7 cols): Checklist Table + File Uploader */}
+            {/* Left Area (7 cols): Checklist Table + File Uploader */}
             <div className="lg:col-span-7 space-y-6">
               <ChecklistTable
                 validations={validations}
@@ -384,7 +310,7 @@ export function App() {
               />
             </div>
 
-            {/* Right Column (5 cols): Selected Document Inspector & Live Preview */}
+            {/* Right Area (5 cols): Selected Document Inspector */}
             <div className="lg:col-span-5">
               <DocumentInspector
                 selectedValidation={selectedValidation}
@@ -399,7 +325,7 @@ export function App() {
           </div>
         )}
 
-        {/* Tab 3: VALIDATION (Compliance Issue Center) */}
+        {/* Tab 2: COMPLIANCE ISSUE CENTER */}
         {activeTab === 'validation' && (
           <IssueCenter
             validations={validations}
@@ -409,7 +335,7 @@ export function App() {
           />
         )}
 
-        {/* Tab 4: PACKAGE PREVIEW (Final Manifest & Generator) */}
+        {/* Tab 3: PACKAGE PREVIEW & COMPILATION MANIFEST */}
         {activeTab === 'package' && (
           <PackagePreviewView
             tender={tender}
@@ -423,8 +349,75 @@ export function App() {
         )}
       </main>
 
+      {/* Package Generation / Download Result Modal */}
+      {(isGenerating || generatedResult) && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 max-w-md w-full shadow-2xl space-y-5 text-slate-200 font-mono">
+            {isGenerating ? (
+              <div className="text-center py-6 space-y-4">
+                <div className="flex justify-center">
+                  <LordIcon name="refresh" size={48} trigger="loop" colors="primary:#3b82f6,secondary:#10b981" />
+                </div>
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-100">
+                  Compiling Tender Package
+                </h3>
+                <div className="space-y-1 text-xs text-slate-400">
+                  <p>{generationStep || 'Building PDF pages...'}</p>
+                  <p className="text-[11px] text-slate-500">Stamping audit footers & compiling table of contents</p>
+                </div>
+              </div>
+            ) : (
+              generatedResult && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                    <div className="flex items-center space-x-2">
+                      <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                      <h3 className="text-sm font-bold text-slate-100">Package Ready</h3>
+                    </div>
+                    <button
+                      onClick={() => setGeneratedResult(null)}
+                      className="text-slate-400 hover:text-slate-200 p-1"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-2 text-xs">
+                    <div className="text-sm font-bold text-blue-400">{generatedResult.filename}</div>
+                    <div className="grid grid-cols-2 gap-2 text-slate-400 pt-1 border-t border-slate-900">
+                      <div>Total Pages: <span className="text-slate-200 font-semibold">{generatedResult.totalPages}</span></div>
+                      <div>Attachments: <span className="text-slate-200 font-semibold">{totalIncludedDocs}</span></div>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-slate-400">
+                    The package includes an official English cover page, table of contents index, and persistent audit footers on every page.
+                  </p>
+
+                  <div className="flex items-center space-x-3 pt-2">
+                    <button
+                      onClick={() => triggerBrowserDownload(generatedResult.blob, generatedResult.filename)}
+                      className="flex-1 py-2.5 px-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs flex items-center justify-center space-x-2 transition-colors"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>DOWNLOAD AGAIN</span>
+                    </button>
+                    <button
+                      onClick={() => setGeneratedResult(null)}
+                      className="py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs transition-colors"
+                    >
+                      CLOSE
+                    </button>
+                  </div>
+                </div>
+              )
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Engineering Footer */}
-      <footer className="border-t border-slate-900 bg-slate-950/80 py-4 px-6 text-center text-xs font-mono text-slate-500">
+      <footer className="border-t border-slate-800/80 bg-slate-950 py-3.5 px-6 text-center text-xs font-mono text-slate-500">
         <p>
           TENDERFORGE &bull; Daffodil International University AI DevFest 2026 &bull; Strict Browser-Only Architecture
         </p>
