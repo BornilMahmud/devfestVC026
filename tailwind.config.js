@@ -7,20 +7,28 @@ export default {
   theme: {
     extend: {
       colors: {
-        cyber: {
-          900: '#070b14',
-          800: '#0c1222',
-          700: '#141d33',
-          600: '#1e294b',
-          cyan: '#00f0ff',
-          neon: '#10b981',
-          hazard: '#f59e0b',
-          crimson: '#ef4444'
+        tf: {
+          primary: '#245CC6',
+          primaryHover: '#1D4CA8',
+          text: '#18263B',
+          muted: '#5C6B7E',
+          border: '#DEE4EC',
+          canvas: '#F4F6F9',
+          surface: '#FFFFFF',
+          verified: '#21714C',
+          verifiedBg: '#EDF7F1',
+          attention: '#926009',
+          attentionBg: '#FFF7E6',
+          blocking: '#B23A3A',
+          blockingBg: '#FEF0F0',
+          focus: '#91B6FF',
+          selected: '#EDF3FF',
+          hoverRow: '#F8FAFC'
         }
       },
       fontFamily: {
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
-        sans: ['Inter', 'system-ui', 'sans-serif']
+        sans: ['Inter', 'Noto Sans Bengali', 'system-ui', 'sans-serif']
       }
     },
   },

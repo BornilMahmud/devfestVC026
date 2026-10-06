@@ -71,7 +71,9 @@ export const PDFPreviewPanel: React.FC<PDFPreviewPanelProps> = ({ file, lang }) 
           {file.error || 'Corrupted or unreadable PDF'}
         </p>
         <p className="text-[11px] text-slate-400 text-center">
-          This document cannot be previewed or included in the package.
+          {lang === 'bn'
+            ? 'এই নথিটি প্রাকদর্শন বা প্যাকেজে অন্তর্ভুক্ত করা যাবে না।'
+            : 'This document cannot be previewed or included in the package.'}
         </p>
       </div>
     );
@@ -137,7 +139,7 @@ export const PDFPreviewPanel: React.FC<PDFPreviewPanelProps> = ({ file, lang }) 
           <div className="absolute inset-0 flex items-center justify-center bg-slate-950/60 z-10">
             <div className="flex items-center space-x-2 text-cyan-400 text-xs font-mono">
               <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-              <span>Rendering preview...</span>
+              <span>{lang === 'bn' ? 'প্রিভিউ প্রস্তুত হচ্ছে...' : 'Rendering preview...'}</span>
             </div>
           </div>
         )}

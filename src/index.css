@@ -28,3 +28,194 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* ==================================================
+   BUTTON MICRO-INTERACTIONS & ELEVATION TOKENS
+   150ms–220ms responsive cubic-bezier transitions
+   ================================================== */
+
+.btn-tf-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #245CC6;
+  color: #FFFFFF;
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.025em;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid #1D4CA8;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  user-select: none;
+}
+
+.btn-tf-primary:hover:not(:disabled) {
+  background-color: #1D4CA8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(36, 92, 198, 0.2);
+}
+
+.btn-tf-primary:active:not(:disabled) {
+  background-color: #153B8A;
+  transform: scale(0.985);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+.btn-tf-primary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #245CC6;
+}
+
+.btn-tf-primary:disabled {
+  background-color: #F4F6F9;
+  color: #8C9BAE;
+  border-color: #DEE4EC;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Secondary Button */
+.btn-tf-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #FFFFFF;
+  color: #18263B;
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #DEE4EC;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  user-select: none;
+}
+
+.btn-tf-secondary:hover:not(:disabled) {
+  background-color: #F8FAFC;
+  border-color: #CBD5E1;
+  color: #245CC6;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.06);
+}
+
+.btn-tf-secondary:active:not(:disabled) {
+  background-color: #EDF3FF;
+  transform: scale(0.985);
+}
+
+.btn-tf-secondary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #245CC6;
+}
+
+.btn-tf-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Success Button */
+.btn-tf-success {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #21714C;
+  color: #FFFFFF;
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid #19583B;
+  box-shadow: 0 1px 2px rgba(33, 113, 76, 0.12);
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  user-select: none;
+}
+
+.btn-tf-success:hover:not(:disabled) {
+  background-color: #19583B;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(33, 113, 76, 0.22);
+}
+
+.btn-tf-success:active:not(:disabled) {
+  transform: scale(0.985);
+}
+
+/* Subtle micro-motion for icons inside buttons */
+.btn-tf-primary:hover:not(:disabled) .btn-icon-right,
+.btn-tf-secondary:hover:not(:disabled) .btn-icon-right,
+.btn-hover-icon:hover .btn-icon-right {
+  transform: translateX(2px);
+}
+
+.btn-tf-primary:hover:not(:disabled) .btn-icon-up,
+.btn-tf-secondary:hover:not(:disabled) .btn-icon-up,
+.btn-hover-icon:hover .btn-icon-up {
+  transform: translateY(-1.5px);
+}
+
+.btn-icon-right, .btn-icon-up {
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ==================================================
+   PAGE & PANEL REVEAL ANIMATIONS
+   Tight, restrained professional motion
+   ================================================== */
+
+@keyframes tfFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tfFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-tf-fade-up {
+  animation: tfFadeUp 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-tf-fade-in {
+  animation: tfFadeIn 220ms ease-out forwards;
+}
+
+.stagger-1 { animation-delay: 30ms; }
+.stagger-2 { animation-delay: 60ms; }
+.stagger-3 { animation-delay: 90ms; }
+.stagger-4 { animation-delay: 120ms; }
+
+/* ==================================================
+   REDUCED MOTION SUPPORT
+   Respect user system preferences
+   ================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

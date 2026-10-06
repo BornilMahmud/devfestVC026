@@ -15,6 +15,7 @@ import {
   Eye,
 } from 'lucide-react';
 import { LordIcon } from './LordIcon';
+import { t } from '../utils/translations';
 
 interface DocumentsViewProps {
   files: UploadedFile[];
@@ -118,12 +119,16 @@ export const DocumentsView: React.FC<DocumentsViewProps> = ({
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-tf-fade-in">
       {/* Header */}
-      <div>
-        <h2 className="text-xl font-bold text-slate-900 tracking-tight">Documents</h2>
+      <div className="animate-tf-fade-up">
+        <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+          {lang === 'bn' ? 'নথিপত্র' : 'Documents'}
+        </h2>
         <p className="text-xs text-slate-500">
-          Upload, manage, and verify source tender documents.
+          {lang === 'bn'
+            ? 'উৎস টেন্ডার নথি আপলোড, ব্যবস্থাপনা ও যাচাই করুন।'
+            : 'Upload, manage, and verify source tender documents.'}
         </p>
       </div>
 
@@ -134,10 +139,10 @@ export const DocumentsView: React.FC<DocumentsViewProps> = ({
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search uploaded files..."
+            placeholder={lang === 'bn' ? 'আপলোডকৃত ফাইল খুঁজুন...' : 'Search uploaded files...'}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500"
+            className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
           />
         </div>
 
@@ -146,36 +151,36 @@ export const DocumentsView: React.FC<DocumentsViewProps> = ({
           <div className="flex items-center bg-slate-100 rounded-lg p-0.5 text-xs border border-slate-200">
             <button
               onClick={() => setFilterType('all')}
-              className={`px-2.5 py-1 rounded font-medium ${
-                filterType === 'all' ? 'bg-white text-blue-700 font-bold shadow-2xs' : 'text-slate-600'
+              className={`px-2.5 py-1 rounded font-medium transition-all ${
+                filterType === 'all' ? 'bg-white text-blue-700 font-bold shadow-2xs' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              All Files ({files.length})
+              {lang === 'bn' ? `সকল ফাইল (${files.length})` : `All Files (${files.length})`}
             </button>
             <button
               onClick={() => setFilterType('matched')}
-              className={`px-2.5 py-1 rounded font-medium ${
-                filterType === 'matched' ? 'bg-white text-blue-700 font-bold shadow-2xs' : 'text-slate-600'
+              className={`px-2.5 py-1 rounded font-medium transition-all ${
+                filterType === 'matched' ? 'bg-white text-blue-700 font-bold shadow-2xs' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              Assigned
+              {lang === 'bn' ? 'নির্ধারিত' : 'Assigned'}
             </button>
             <button
               onClick={() => setFilterType('unmatched')}
-              className={`px-2.5 py-1 rounded font-medium ${
-                filterType === 'unmatched' ? 'bg-white text-blue-700 font-bold shadow-2xs' : 'text-slate-600'
+              className={`px-2.5 py-1 rounded font-medium transition-all ${
+                filterType === 'unmatched' ? 'bg-white text-blue-700 font-bold shadow-2xs' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              Unassigned
+              {lang === 'bn' ? 'অনির্ধারিত' : 'Unassigned'}
             </button>
           </div>
 
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg text-xs font-semibold flex items-center space-x-1.5 shadow-2xs transition-colors cursor-pointer"
+            className="btn-tf-primary btn-hover-icon !py-1.5 !px-3.5"
           >
-            <UploadCloud className="w-3.5 h-3.5" />
-            <span>Upload Documents</span>
+            <UploadCloud className="w-3.5 h-3.5 btn-icon-up" />
+            <span>{t(lang, 'uploadDocuments')}</span>
           </button>
         </div>
       </div>
@@ -216,14 +221,18 @@ export const DocumentsView: React.FC<DocumentsViewProps> = ({
         </div>
 
         <h4 className="text-sm font-bold text-slate-800">
-          {processing ? 'Processing and verifying PDFs...' : 'UPLOAD DOCUMENTS'}
+          {processing
+            ? (lang === 'bn' ? 'পিডিএফ প্রক্রিয়া ও যাচাই করা হচ্ছে...' : 'Processing and verifying PDFs...')
+            : t(lang, 'uploadDocuments')}
         </h4>
         <p className="text-xs text-slate-500 mt-1">
-          Drop PDF files here or <span className="text-blue-600 font-semibold underline">Choose Files</span>
+          {lang === 'bn'
+            ? <>এখানে পিডিএফ ফাইল টেনে আনুন অথবা <span className="text-blue-600 font-semibold underline">ফাইল বেছে নিন</span></>
+            : <>Drop PDF files here or <span className="text-blue-600 font-semibold underline">Choose Files</span></>}
         </p>
 
         <span className="text-[11px] text-slate-400 mt-2">
-          Maximum 30 files &bull; Maximum 50 MB total &bull; Strict PDF format
+          {t(lang, 'uploadLimitNotice')}
         </span>
       </div>
 
@@ -240,15 +249,18 @@ export const DocumentsView: React.FC<DocumentsViewProps> = ({
         <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 space-y-1">
           <div className="flex items-center space-x-1.5 font-bold text-amber-900">
             <Copy className="w-4 h-4 text-amber-600" />
-            <span>Duplicate Content Detected</span>
+            <span>{t(lang, 'duplicateDetected')}</span>
           </div>
           <p className="text-[11px] text-amber-700">
-            Files with identical byte content cannot be matched to conflicting requirements:
+            {lang === 'bn'
+              ? 'হুবহু একই তথ্যের ফাইল দুটি ভিন্ন প্রয়োজনীয়তায় ব্যবহার করা যাবে না:'
+              : 'Files with identical byte content cannot be matched to conflicting requirements:'}
           </p>
           <ul className="list-disc pl-5 text-[11px] space-y-0.5 text-amber-900">
             {Array.from(duplicateGroups.entries()).map(([hash, group]) => (
               <li key={hash}>
-                Identical files: <span className="font-semibold">{group.map((f) => f.name).join(' ↔ ')}</span>
+                {lang === 'bn' ? 'অনুরূপ ফাইল: ' : 'Identical files: '}
+                <span className="font-semibold">{group.map((f) => f.name).join(' ↔ ')}</span>
               </li>
             ))}
           </ul>
@@ -258,29 +270,29 @@ export const DocumentsView: React.FC<DocumentsViewProps> = ({
       {/* Uploaded Files Table */}
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
         <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between text-xs text-slate-500">
-          <span className="font-bold text-slate-800">Uploaded File Repository</span>
+          <span className="font-bold text-slate-800">{t(lang, 'fileRepository')}</span>
           <span>
-            {files.length} Files &bull; {(files.reduce((a, b) => a + b.size, 0) / (1024 * 1024)).toFixed(2)} MB / 50 MB
+            {files.length} {lang === 'bn' ? 'ফাইল' : 'Files'} &bull; {(files.reduce((a, b) => a + b.size, 0) / (1024 * 1024)).toFixed(2)} MB / 50 MB
           </span>
         </div>
 
         {filteredFiles.length === 0 ? (
           <div className="py-12 text-center text-slate-400 text-xs">
             {files.length === 0
-              ? 'No documents uploaded yet. Drop PDF files above to begin.'
-              : 'No files match the search criteria.'}
+              ? (lang === 'bn' ? 'এখনও কোন নথি আপলোড করা হয়নি। শুরু করতে উপরে পিডিএফ ফাইল ড্রপ করুন।' : 'No documents uploaded yet. Drop PDF files above to begin.')
+              : (lang === 'bn' ? 'অনুসন্ধানের সাথে কোন ফাইল মিলেনি।' : 'No files match the search criteria.')}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-50/70 border-b border-slate-200 text-slate-500 font-semibold text-[11px]">
-                  <th className="py-2.5 px-4">Filename</th>
-                  <th className="py-2.5 px-4 text-center w-20">Pages</th>
-                  <th className="py-2.5 px-4 w-24">Size</th>
-                  <th className="py-2.5 px-4 w-32">Duplicate Status</th>
-                  <th className="py-2.5 px-4">Assigned Requirement</th>
-                  <th className="py-2.5 px-4 text-center w-20">Action</th>
+                  <th className="py-2.5 px-4">{t(lang, 'filename')}</th>
+                  <th className="py-2.5 px-4 text-center w-20">{t(lang, 'pages')}</th>
+                  <th className="py-2.5 px-4 w-24">{t(lang, 'filesize')}</th>
+                  <th className="py-2.5 px-4 w-32">{t(lang, 'duplicateStatus')}</th>
+                  <th className="py-2.5 px-4">{t(lang, 'assignedRequirement')}</th>
+                  <th className="py-2.5 px-4 text-center w-20">{t(lang, 'actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -288,6 +300,7 @@ export const DocumentsView: React.FC<DocumentsViewProps> = ({
                   const isDuplicate = duplicateGroups.has(file.hash);
                   const matchedReq = matches.find((m) => m.fileId === file.id);
                   const reqObj = matchedReq ? requirements.find((r) => r.id === matchedReq.requirementId) : null;
+                  const reqTitle = reqObj ? (lang === 'bn' ? reqObj.title_bn : reqObj.title_en) : '';
 
                   return (
                     <tr key={file.id} className="hover:bg-slate-50/80 transition-colors">
@@ -303,25 +316,25 @@ export const DocumentsView: React.FC<DocumentsViewProps> = ({
                         {isDuplicate ? (
                           <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
                             <Copy className="w-3 h-3" />
-                            <span>Duplicate</span>
+                            <span>{t(lang, 'duplicate')}</span>
                           </span>
                         ) : (
-                          <span className="text-slate-400 text-[11px]">Unique</span>
+                          <span className="text-slate-400 text-[11px]">{t(lang, 'unique')}</span>
                         )}
                       </td>
                       <td className="py-3 px-4">
                         {reqObj ? (
                           <span className="text-blue-700 font-medium">
-                            {reqObj.id} &bull; {reqObj.title_en}
+                            {reqObj.id} &bull; {reqTitle}
                           </span>
                         ) : (
-                          <span className="text-slate-400 italic">Unassigned</span>
+                          <span className="text-slate-400 italic">{t(lang, 'unassigned')}</span>
                         )}
                       </td>
                       <td className="py-3 px-4 text-center">
                         <button
                           onClick={() => onFileRemoved(file.id)}
-                          className="text-slate-400 hover:text-red-600 transition-colors p-1"
+                          className="text-slate-400 hover:text-red-600 transition-colors p-1 cursor-pointer"
                           title="Remove file"
                         >
                           <Trash2 className="w-3.5 h-3.5" />

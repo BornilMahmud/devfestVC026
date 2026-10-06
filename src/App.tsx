@@ -24,6 +24,7 @@ import { ValidationView } from './components/ValidationView';
 import { PackagePreviewView } from './components/PackagePreviewView';
 import { DesignSystemView } from './components/DesignSystemView';
 import { LordIcon } from './components/LordIcon';
+import { IntroCinematic } from './components/IntroCinematic';
 import { Download, X, ShieldCheck } from 'lucide-react';
 
 export function App() {
@@ -34,6 +35,17 @@ export function App() {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [matches, setMatches] = useState<DocumentMatch[]>([]);
   const [selectedReqId, setSelectedReqId] = useState<string | null>(null);
+
+  // 3D Intro Animation State (respects reduced motion & session seen flag)
+  const [showIntro, setShowIntro] = useState<boolean>(() => {
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return false;
+    }
+    if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('tf_intro_seen')) {
+      return false;
+    }
+    return true;
+  });
 
   // PDF Generation State & Modal
   const [isGenerating, setIsGenerating] = useState(false);
@@ -133,16 +145,16 @@ export function App() {
     const addedCount = updatedMatches.length - matches.length;
     setMatches(updatedMatches);
     if (addedCount > 0) {
-      setNotification(`Smart matched ${addedCount} document(s).`);
+      setNotification(lang === 'bn' ? `${addedCount}টি নথি স্বয়ংক্রিয়ভাবে মেলানো হয়েছে।` : `Smart matched ${addedCount} document(s).`);
     } else {
-      setNotification('No new automatic matches found.');
+      setNotification(t(lang, 'noNewMatches'));
     }
   };
 
   // Handler: Export CSV bonus
   const handleExportCSV = () => {
     exportChecklistToCSV(tender, validations);
-    setNotification('Exported compliance checklist as CSV.');
+    setNotification(t(lang, 'exportedCsvNotification'));
   };
 
   // Handler: Save workspace to localStorage bonus
@@ -156,7 +168,7 @@ export function App() {
       localStorage.setItem('tenderforge_workspace', JSON.stringify(stateToSave));
       setNotification(t(lang, 'workspaceSaved'));
     } catch (e) {
-      setNotification('Failed to save workspace locally.');
+      setNotification(t(lang, 'saveWorkspaceFailed'));
     }
   };
 
@@ -174,12 +186,12 @@ export function App() {
           setRequirements(parsed.requirements);
           setMatches([]);
           setSelectedReqId(parsed.requirements[0]?.id || null);
-          setNotification(`Loaded tender: ${parsed.tender.tender_id}`);
+          setNotification(`${t(lang, 'loadedTenderPrefix')} ${parsed.tender.tender_id}`);
         } else {
-          setNotification('Invalid requirements.json schema.');
+          setNotification(t(lang, 'invalidJsonSchema'));
         }
       } catch (err) {
-        setNotification('Could not parse requirements JSON file.');
+        setNotification(t(lang, 'parseJsonError'));
       }
     };
     reader.readAsText(file);
@@ -192,19 +204,19 @@ export function App() {
     setRequirements(sampleRequirements.requirements);
     setMatches([]);
     setSelectedReqId(sampleRequirements.requirements[0].id);
-    setNotification('Loaded official sample tender T-2026-0417.');
+    setNotification(t(lang, 'loadedSampleTender'));
   };
 
   // Handler: Final Package Generation with Elegant Modal
   const handleGeneratePackage = async () => {
     if (!readiness.isReady) {
       setActiveTab('validation');
-      setNotification('Cannot generate package: Blocking issues exist.');
+      setNotification(t(lang, 'cannotGenerateBlockers'));
       return;
     }
 
     setIsGenerating(true);
-    setGenerationStep('Validating source documents...');
+    setGenerationStep(lang === 'bn' ? 'নথিসমূহ যাচাই করা হচ্ছে...' : 'Validating source documents...');
     setGeneratedResult(null);
 
     try {
@@ -217,10 +229,14 @@ export function App() {
 
       setGeneratedResult(result);
       triggerBrowserDownload(result.blob, result.filename);
-      setNotification(`Tender Package created successfully (${result.totalPages} pages).`);
+      setNotification(
+        lang === 'bn'
+          ? `${t(lang, 'packageCreatedSuccess')} (${result.totalPages} ${t(lang, 'pagesUnit')})।`
+          : `${t(lang, 'packageCreatedSuccess')} (${result.totalPages} ${t(lang, 'pagesUnit')}).`
+      );
     } catch (err: any) {
       console.error(err);
-      setNotification(`Failed to generate package: ${err?.message || 'Unknown error'}`);
+      setNotification(`${t(lang, 'packageCreatedFailed')} ${err?.message || 'Unknown error'}`);
     } finally {
       setIsGenerating(false);
     }
@@ -260,6 +276,7 @@ export function App() {
           onLanguageChange={setLang}
           onLoadRequirementsClick={() => jsonInputRef.current?.click()}
           onLoadSampleTender={handleLoadSample}
+          onReplayIntro={() => setShowIntro(true)}
         />
 
         {/* Workspace Body */}
@@ -301,6 +318,7 @@ export function App() {
               onMatchFile={handleMatchFile}
               onUnmatchFile={handleUnmatchFile}
               onSetExpiryDate={handleSetExpiryDate}
+              onNavigateToValidation={() => setActiveTab('validation')}
               lang={lang}
             />
           )}
@@ -326,7 +344,7 @@ export function App() {
             />
           )}
 
-          {activeTab === 'design-system' && <DesignSystemView />}
+          {activeTab === 'design-system' && <DesignSystemView lang={lang} />}
         </main>
       </div>
 
@@ -340,50 +358,73 @@ export function App() {
 
       {/* Package Generation / Ready Modal */}
       {(isGenerating || generatedResult) && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 max-w-md w-full shadow-xl space-y-4 text-slate-800">
+        <div className="fixed inset-0 z-50 bg-[#0F172A]/40 backdrop-blur-xs flex items-center justify-center p-4 animate-tf-fade-in">
+          <div className="bg-[#FFFFFF] border border-[#DEE4EC] rounded-2xl p-6 max-w-md w-full shadow-xl space-y-4 text-[#18263B] animate-tf-fade-up">
             {isGenerating ? (
               <div className="text-center py-6 space-y-3">
-                <div className="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
-                <h3 className="text-sm font-bold text-slate-900">Compiling Tender Package</h3>
-                <p className="text-xs text-slate-500">{generationStep || 'Building PDF document...'}</p>
+                <div className="flex justify-center">
+                  <LordIcon name="refresh" size={44} trigger="loop" colors="primary:#245CC6,secondary:#5C6B7E" />
+                </div>
+                <h3 className="text-sm font-bold tracking-wider text-[#18263B] uppercase">
+                  {t(lang, 'preparingPackage')}
+                </h3>
+                <p className="text-xs text-[#5C6B7E] font-mono">
+                  {generationStep || (lang === 'bn' ? 'নথি সংকলন ও সূচিপত্র তৈরি হচ্ছে...' : 'Validating, indexing & compiling PDF package...')}
+                </p>
+                <div className="w-48 h-1 bg-[#F4F6F9] rounded-full mx-auto overflow-hidden">
+                  <div className="w-full h-full bg-[#245CC6] animate-pulse" />
+                </div>
               </div>
             ) : (
               generatedResult && (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <div className="flex items-center space-x-2 text-emerald-600 font-bold text-sm">
-                      <ShieldCheck className="w-5 h-5" />
-                      <span>Package Ready</span>
+                  <div className="flex items-center justify-between pb-3 border-b border-[#DEE4EC]">
+                    <div className="flex items-center space-x-2 text-[#21714C] font-bold text-sm">
+                      <LordIcon name="check" size={24} trigger="in" colors="primary:#21714C,secondary:#18263B" />
+                      <span>{t(lang, 'packageReadyModal')}</span>
                     </div>
                     <button
                       onClick={() => setGeneratedResult(null)}
-                      className="text-slate-400 hover:text-slate-600 p-1"
+                      className="text-[#5C6B7E] hover:text-[#18263B] p-1 rounded hover:bg-[#F4F6F9] transition-colors"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   </div>
 
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-1.5">
-                    <div className="font-bold text-blue-700 text-sm">{generatedResult.filename}</div>
-                    <div className="text-slate-500 text-[11px]">
-                      {generatedResult.totalPages} pages &bull; Official Cover & Table of Contents included
+                  <div className="bg-[#F8FAFC] p-4 rounded-xl border border-[#DEE4EC] text-xs space-y-2">
+                    <div className="font-bold text-[#245CC6] text-sm break-all font-mono">
+                      {generatedResult.filename}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#DEE4EC] text-[11px] text-[#5C6B7E]">
+                      <div>
+                        <span className="font-semibold text-[#18263B]">{t(lang, 'docCountLabel')} </span>
+                        <span>{validations.filter((v) => v.matchedFile).length} {lang === 'bn' ? 'যাচাইকৃত' : 'verified'}</span>
+                      </div>
+                      <div>
+                        <span className="font-semibold text-[#18263B]">{t(lang, 'pageCountLabel')} </span>
+                        <span>{generatedResult.totalPages} {lang === 'bn' ? 'পৃষ্ঠা' : 'pages'}</span>
+                      </div>
+                    </div>
+                    <div className="text-[10px] text-[#5C6B7E] italic pt-1">
+                      {lang === 'bn'
+                        ? 'অফিসিয়াল কভার পৃষ্ঠা ও সংবিধিবদ্ধ সূচিপত্র অন্তর্ভুক্ত'
+                        : 'Includes Official Cover Page & Statutory Table of Contents Index'}
                     </div>
                   </div>
 
                   <div className="flex items-center space-x-2 pt-2">
                     <button
                       onClick={() => triggerBrowserDownload(generatedResult.blob, generatedResult.filename)}
-                      className="flex-1 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs flex items-center justify-center space-x-1.5 shadow-2xs transition-colors"
+                      className="btn-tf-success btn-hover-icon flex-1 !py-2.5 !text-xs cursor-pointer"
                     >
-                      <Download className="w-4 h-4" />
-                      <span>Download Package</span>
+                      <LordIcon name="download" size={16} trigger="hover" colors="primary:#ffffff,secondary:#ffffff" />
+                      <span>{t(lang, 'downloadPackage')}</span>
                     </button>
                     <button
                       onClick={() => setGeneratedResult(null)}
-                      className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg text-xs transition-colors"
+                      className="btn-tf-secondary !py-2.5 !px-4 !text-xs cursor-pointer"
                     >
-                      Close
+                      {t(lang, 'closeBtn')}
                     </button>
                   </div>
                 </div>
@@ -391,6 +432,11 @@ export function App() {
             )}
           </div>
         </div>
+      )}
+
+      {/* 3D Intro Cinematic (Opens on first session load or manual replay) */}
+      {showIntro && (
+        <IntroCinematic onComplete={() => setShowIntro(false)} lang={lang} />
       )}
     </div>
   );
