@@ -15,26 +15,20 @@ import { generateTenderPackagePDF, triggerBrowserDownload } from './utils/pdfGen
 import { t } from './utils/translations';
 
 // Components
-import { TopNav, NavTab } from './components/TopNav';
-import { ReadinessHeader } from './components/ReadinessHeader';
-import { ChecklistTable } from './components/ChecklistTable';
-import { DocumentInspector } from './components/DocumentInspector';
-import { FileUploader } from './components/FileUploader';
-import { IssueCenter } from './components/IssueCenter';
+import { Sidebar, AppNavTab } from './components/Sidebar';
+import { TopHeader } from './components/TopHeader';
+import { OverviewView } from './components/OverviewView';
+import { DocumentsView } from './components/DocumentsView';
+import { MatchingView } from './components/MatchingView';
+import { ValidationView } from './components/ValidationView';
 import { PackagePreviewView } from './components/PackagePreviewView';
+import { DesignSystemView } from './components/DesignSystemView';
 import { LordIcon } from './components/LordIcon';
-import {
-  Download,
-  CheckCircle2,
-  X,
-  FileCheck,
-  ShieldCheck,
-  ArrowRight,
-} from 'lucide-react';
+import { Download, X, ShieldCheck } from 'lucide-react';
 
 export function App() {
   const [lang, setLang] = useState<Language>('en');
-  const [activeTab, setActiveTab] = useState<NavTab>('documents');
+  const [activeTab, setActiveTab] = useState<AppNavTab>('overview');
   const [tender, setTender] = useState<TenderMetadata>(sampleRequirements.tender);
   const [requirements, setRequirements] = useState<DocumentRequirement[]>(sampleRequirements.requirements);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
@@ -86,14 +80,14 @@ export function App() {
   // Handler: Add new files
   const handleFilesAdded = (newFiles: UploadedFile[]) => {
     setUploadedFiles((prev) => [...prev, ...newFiles]);
-    setNotification(`Added ${newFiles.length} document(s).`);
+    setNotification(`Uploaded ${newFiles.length} file(s).`);
   };
 
   // Handler: Remove file
   const handleFileRemoved = (fileId: string) => {
     setUploadedFiles((prev) => prev.filter((f) => f.id !== fileId));
     setMatches((prev) => prev.filter((m) => m.fileId !== fileId));
-    setNotification('File removed.');
+    setNotification('File removed from repository.');
   };
 
   // Handler: Match file to requirement
@@ -139,7 +133,7 @@ export function App() {
     const addedCount = updatedMatches.length - matches.length;
     setMatches(updatedMatches);
     if (addedCount > 0) {
-      setNotification(`Smart matched ${addedCount} document(s) based on filenames.`);
+      setNotification(`Smart matched ${addedCount} document(s).`);
     } else {
       setNotification('No new automatic matches found.');
     }
@@ -222,7 +216,6 @@ export function App() {
       );
 
       setGeneratedResult(result);
-      // Auto-trigger browser download
       triggerBrowserDownload(result.blob, result.filename);
       setNotification(`Tender Package created successfully (${result.totalPages} pages).`);
     } catch (err: any) {
@@ -233,16 +226,14 @@ export function App() {
     }
   };
 
-  // Jump from Issue Center directly to inspector in documents tab
-  const handleReviewFromIssue = (reqId: string) => {
+  // Jump to specific requirement inspection
+  const handleInspectRequirement = (reqId: string) => {
     setSelectedReqId(reqId);
-    setActiveTab('documents');
+    setActiveTab('matching');
   };
 
-  const totalIncludedDocs = validations.filter((v) => v.matchedFile).length;
-
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] flex antialiased font-sans">
       {/* Hidden file input for custom JSON */}
       <input
         ref={jsonInputRef}
@@ -252,161 +243,147 @@ export function App() {
         className="hidden"
       />
 
-      {/* Top Navigation */}
-      <TopNav
-        tender={tender}
-        lang={lang}
+      {/* Left Navigation Sidebar */}
+      <Sidebar
         activeTab={activeTab}
         onTabChange={setActiveTab}
         blockerCount={readiness.blockers.length}
-        onLanguageChange={setLang}
-        onLoadRequirementsClick={() => jsonInputRef.current?.click()}
-        onLoadSampleTender={handleLoadSample}
+        lang={lang}
       />
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+        {/* Top Header */}
+        <TopHeader
+          tender={tender}
+          lang={lang}
+          onLanguageChange={setLang}
+          onLoadRequirementsClick={() => jsonInputRef.current?.click()}
+          onLoadSampleTender={handleLoadSample}
+        />
+
+        {/* Workspace Body */}
+        <main className="flex-1 p-6 max-w-7xl w-full mx-auto">
+          {activeTab === 'overview' && (
+            <OverviewView
+              tender={tender}
+              validations={validations}
+              readiness={readiness}
+              lang={lang}
+              onGenerate={handleGeneratePackage}
+              onAutoMatch={handleAutoMatch}
+              onExportCSV={handleExportCSV}
+              onReviewIssues={() => setActiveTab('validation')}
+              onSelectRequirement={handleInspectRequirement}
+              isGenerating={isGenerating}
+            />
+          )}
+
+          {activeTab === 'documents' && (
+            <DocumentsView
+              files={uploadedFiles}
+              duplicateGroups={duplicateGroups}
+              requirements={requirements}
+              matches={matches}
+              onFilesAdded={handleFilesAdded}
+              onFileRemoved={handleFileRemoved}
+              lang={lang}
+            />
+          )}
+
+          {activeTab === 'matching' && (
+            <MatchingView
+              validations={validations}
+              uploadedFiles={uploadedFiles}
+              tender={tender}
+              selectedReqId={selectedReqId}
+              onSelectReq={(id) => setSelectedReqId(id)}
+              onMatchFile={handleMatchFile}
+              onUnmatchFile={handleUnmatchFile}
+              onSetExpiryDate={handleSetExpiryDate}
+              lang={lang}
+            />
+          )}
+
+          {activeTab === 'validation' && (
+            <ValidationView
+              validations={validations}
+              tender={tender}
+              onReviewRequirement={handleInspectRequirement}
+              lang={lang}
+            />
+          )}
+
+          {activeTab === 'package' && (
+            <PackagePreviewView
+              tender={tender}
+              validations={validations}
+              readiness={readiness}
+              lang={lang}
+              onGenerate={handleGeneratePackage}
+              isGenerating={isGenerating}
+              generationStep={generationStep}
+            />
+          )}
+
+          {activeTab === 'design-system' && <DesignSystemView />}
+        </main>
+      </div>
 
       {/* Toast Notification Banner */}
       {notification && (
-        <div className="fixed bottom-5 right-5 z-50 bg-slate-900 border border-slate-700 text-slate-200 px-4 py-2.5 rounded-lg shadow-xl text-xs font-mono flex items-center space-x-2">
+        <div className="fixed bottom-5 right-5 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-lg shadow-lg text-xs font-mono flex items-center space-x-2">
           <span className="w-2 h-2 rounded-full bg-blue-400" />
           <span>{notification}</span>
         </div>
       )}
 
-      {/* Main Workspace Body */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
-        {/* Main Summary & Preflight Compliance Header */}
-        <ReadinessHeader
-          tender={tender}
-          validations={validations}
-          readiness={readiness}
-          lang={lang}
-          onGenerate={handleGeneratePackage}
-          onAutoMatch={handleAutoMatch}
-          onExportCSV={handleExportCSV}
-          onSaveWorkspace={handleSaveWorkspace}
-          onReviewIssues={() => setActiveTab('validation')}
-          isGenerating={isGenerating}
-          generationStep={generationStep}
-        />
-
-        {/* Tab 1: DOCUMENTS WORKSPACE (Main Working Area: Checklist + Ingestion + Inspector) */}
-        {activeTab === 'documents' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left Area (7 cols): Checklist Table + File Uploader */}
-            <div className="lg:col-span-7 space-y-6">
-              <ChecklistTable
-                validations={validations}
-                selectedReqId={selectedReqId}
-                onSelectReq={(id) => setSelectedReqId(id)}
-                lang={lang}
-              />
-
-              <FileUploader
-                files={uploadedFiles}
-                duplicateGroups={duplicateGroups}
-                onFilesAdded={handleFilesAdded}
-                onFileRemoved={handleFileRemoved}
-                lang={lang}
-              />
-            </div>
-
-            {/* Right Area (5 cols): Selected Document Inspector */}
-            <div className="lg:col-span-5">
-              <DocumentInspector
-                selectedValidation={selectedValidation}
-                uploadedFiles={uploadedFiles}
-                tender={tender}
-                lang={lang}
-                onMatchFile={handleMatchFile}
-                onUnmatchFile={handleUnmatchFile}
-                onSetExpiryDate={handleSetExpiryDate}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Tab 2: COMPLIANCE ISSUE CENTER */}
-        {activeTab === 'validation' && (
-          <IssueCenter
-            validations={validations}
-            tender={tender}
-            lang={lang}
-            onReviewRequirement={handleReviewFromIssue}
-          />
-        )}
-
-        {/* Tab 3: PACKAGE PREVIEW & COMPILATION MANIFEST */}
-        {activeTab === 'package' && (
-          <PackagePreviewView
-            tender={tender}
-            validations={validations}
-            readiness={readiness}
-            lang={lang}
-            onGenerate={handleGeneratePackage}
-            isGenerating={isGenerating}
-            generationStep={generationStep}
-          />
-        )}
-      </main>
-
-      {/* Package Generation / Download Result Modal */}
+      {/* Package Generation / Ready Modal */}
       {(isGenerating || generatedResult) && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 max-w-md w-full shadow-2xl space-y-5 text-slate-200 font-mono">
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 max-w-md w-full shadow-xl space-y-4 text-slate-800">
             {isGenerating ? (
-              <div className="text-center py-6 space-y-4">
-                <div className="flex justify-center">
-                  <LordIcon name="refresh" size={48} trigger="loop" colors="primary:#3b82f6,secondary:#10b981" />
-                </div>
-                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-100">
-                  Compiling Tender Package
-                </h3>
-                <div className="space-y-1 text-xs text-slate-400">
-                  <p>{generationStep || 'Building PDF pages...'}</p>
-                  <p className="text-[11px] text-slate-500">Stamping audit footers & compiling table of contents</p>
-                </div>
+              <div className="text-center py-6 space-y-3">
+                <div className="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
+                <h3 className="text-sm font-bold text-slate-900">Compiling Tender Package</h3>
+                <p className="text-xs text-slate-500">{generationStep || 'Building PDF document...'}</p>
               </div>
             ) : (
               generatedResult && (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                    <div className="flex items-center space-x-2">
-                      <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                      <h3 className="text-sm font-bold text-slate-100">Package Ready</h3>
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="flex items-center space-x-2 text-emerald-600 font-bold text-sm">
+                      <ShieldCheck className="w-5 h-5" />
+                      <span>Package Ready</span>
                     </div>
                     <button
                       onClick={() => setGeneratedResult(null)}
-                      className="text-slate-400 hover:text-slate-200 p-1"
+                      className="text-slate-400 hover:text-slate-600 p-1"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   </div>
 
-                  <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-2 text-xs">
-                    <div className="text-sm font-bold text-blue-400">{generatedResult.filename}</div>
-                    <div className="grid grid-cols-2 gap-2 text-slate-400 pt-1 border-t border-slate-900">
-                      <div>Total Pages: <span className="text-slate-200 font-semibold">{generatedResult.totalPages}</span></div>
-                      <div>Attachments: <span className="text-slate-200 font-semibold">{totalIncludedDocs}</span></div>
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-1.5">
+                    <div className="font-bold text-blue-700 text-sm">{generatedResult.filename}</div>
+                    <div className="text-slate-500 text-[11px]">
+                      {generatedResult.totalPages} pages &bull; Official Cover & Table of Contents included
                     </div>
                   </div>
 
-                  <p className="text-xs text-slate-400">
-                    The package includes an official English cover page, table of contents index, and persistent audit footers on every page.
-                  </p>
-
-                  <div className="flex items-center space-x-3 pt-2">
+                  <div className="flex items-center space-x-2 pt-2">
                     <button
                       onClick={() => triggerBrowserDownload(generatedResult.blob, generatedResult.filename)}
-                      className="flex-1 py-2.5 px-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs flex items-center justify-center space-x-2 transition-colors"
+                      className="flex-1 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs flex items-center justify-center space-x-1.5 shadow-2xs transition-colors"
                     >
                       <Download className="w-4 h-4" />
-                      <span>DOWNLOAD AGAIN</span>
+                      <span>Download Package</span>
                     </button>
                     <button
                       onClick={() => setGeneratedResult(null)}
-                      className="py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs transition-colors"
+                      className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg text-xs transition-colors"
                     >
-                      CLOSE
+                      Close
                     </button>
                   </div>
                 </div>
@@ -415,13 +392,6 @@ export function App() {
           </div>
         </div>
       )}
-
-      {/* Engineering Footer */}
-      <footer className="border-t border-slate-800/80 bg-slate-950 py-3.5 px-6 text-center text-xs font-mono text-slate-500">
-        <p>
-          TENDERFORGE &bull; Daffodil International University AI DevFest 2026 &bull; Strict Browser-Only Architecture
-        </p>
-      </footer>
     </div>
   );
 }
