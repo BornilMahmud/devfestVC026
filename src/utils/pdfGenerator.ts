@@ -373,7 +373,7 @@ export async function generateTenderPackagePDF(
 
   onProgress?.({ step: 'Finalizing PDF output package...', percent: 98 });
   const pdfBytes = await masterDoc.save();
-  const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+  const blob = new Blob([pdfBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
   const filename = `${tender.tender_id}_Package.pdf`;
 
   onProgress?.({ step: 'Package ready for download.', percent: 100 });

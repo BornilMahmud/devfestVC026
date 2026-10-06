@@ -43,6 +43,8 @@ function calculateMatchScore(filename: string, req: DocumentRequirement): number
   if (cleanTitle.includes(cleanFileName)) {
     return 40;
   }
+
+  return score;
 }
 
 /**
