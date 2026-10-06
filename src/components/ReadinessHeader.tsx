@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { ReadinessSummary, Language } from '../types';
 import { t } from '../utils/translations';
+import { LordIcon } from './LordIcon';
 import {
-  ShieldCheck,
-  ShieldAlert,
   Download,
   FileSpreadsheet,
   Wand2,
@@ -11,6 +10,8 @@ import {
   Save,
   CheckCircle,
   Loader2,
+  ShieldAlert,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface ReadinessHeaderProps {
@@ -39,17 +40,17 @@ export const ReadinessHeader: React.FC<ReadinessHeaderProps> = ({
   const { percentage, isReady, blockers, mandatoryCount, readyCount } = readiness;
 
   return (
-    <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 shadow-xl space-y-4">
+    <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 shadow-xl space-y-3">
       {/* Top Banner: Readiness Status + Metrics */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Readiness Meter */}
         <div className="space-y-1.5 flex-1 max-w-lg">
           <div className="flex items-center justify-between text-xs font-mono">
-            <span className="text-slate-300 font-bold tracking-wider flex items-center space-x-1.5">
+            <span className="text-slate-300 font-bold tracking-wider flex items-center space-x-2">
               {isReady ? (
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <LordIcon name="shield" size={18} trigger="hover" colors="primary:#10b981,secondary:#38bdf8" />
               ) : (
-                <ShieldAlert className="w-4 h-4 text-amber-400" />
+                <LordIcon name="lock" size={18} trigger="hover" colors="primary:#f59e0b,secondary:#ef4444" />
               )}
               <span>{t(lang, 'submissionReadiness')}</span>
             </span>
@@ -63,11 +64,11 @@ export const ReadinessHeader: React.FC<ReadinessHeaderProps> = ({
           </div>
 
           {/* Progress bar */}
-          <div className="w-full h-3 bg-slate-950 rounded-full overflow-hidden p-0.5 border border-slate-800">
+          <div className="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden p-0.5 border border-slate-800">
             <div
-              className={`h-full rounded-full transition-all duration-500 ${
+              className={`h-full rounded-full transition-all duration-300 ${
                 isReady
-                  ? 'bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.5)]'
+                  ? 'bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.4)]'
                   : 'bg-gradient-to-r from-amber-500 to-yellow-400'
               }`}
               style={{ width: `${percentage}%` }}
@@ -80,10 +81,10 @@ export const ReadinessHeader: React.FC<ReadinessHeaderProps> = ({
           </div>
         </div>
 
-        {/* State Badge */}
+        {/* State Badge & Dominant Action Button */}
         <div className="flex items-center space-x-3">
           <div
-            className={`px-3.5 py-2 rounded-lg border font-mono text-xs font-bold flex items-center space-x-2 shadow-md ${
+            className={`px-3.5 py-2 rounded-lg border font-mono text-xs font-bold flex items-center space-x-2 shadow-sm ${
               isReady
                 ? 'bg-emerald-950/40 text-emerald-300 border-emerald-500/50'
                 : 'bg-amber-950/40 text-amber-300 border-amber-500/50'
@@ -91,25 +92,25 @@ export const ReadinessHeader: React.FC<ReadinessHeaderProps> = ({
           >
             {isReady ? (
               <>
-                <CheckCircle className="w-4 h-4 text-emerald-400" />
+                <LordIcon name="check" size={16} trigger="hover" colors="primary:#10b981,secondary:#34d399" />
                 <span>{t(lang, 'packageReady')}</span>
               </>
             ) : (
               <>
-                <AlertCircle className="w-4 h-4 text-amber-400 animate-pulse" />
+                <AlertCircle className="w-4 h-4 text-amber-400" />
                 <span>{t(lang, 'packageLocked')}</span>
               </>
             )}
           </div>
 
-          {/* Generate Button */}
+          {/* Dominant Generate Button */}
           <button
             onClick={onGenerate}
             disabled={!isReady || isGenerating}
-            className={`px-5 py-2.5 rounded-lg text-xs font-mono font-bold flex items-center space-x-2 transition-all shadow-lg ${
+            className={`px-5 py-2.5 rounded-lg text-xs font-mono font-bold flex items-center space-x-2 transition-all shadow-md ${
               isReady && !isGenerating
                 ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-slate-950 shadow-cyan-500/25 cursor-pointer active:scale-95'
-                : 'bg-slate-800/80 text-slate-500 border border-slate-700/60 cursor-not-allowed'
+                : 'bg-slate-800 text-slate-500 border border-slate-700/60 cursor-not-allowed'
             }`}
           >
             {isGenerating ? (
@@ -128,7 +129,7 @@ export const ReadinessHeader: React.FC<ReadinessHeaderProps> = ({
       </div>
 
       {/* Auxiliary Action Bar (Bonus Tools) */}
-      <div className="flex flex-wrap items-center justify-between pt-3 border-t border-slate-800/80 gap-2">
+      <div className="flex flex-wrap items-center justify-between pt-2.5 border-t border-slate-800/80 gap-2">
         <div className="flex items-center space-x-2">
           <button
             onClick={onAutoMatch}

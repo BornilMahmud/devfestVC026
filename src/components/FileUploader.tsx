@@ -3,6 +3,7 @@ import { UploadedFile, DuplicateGroup, Language } from '../types';
 import { computeSHA256 } from '../utils/hashing';
 import { inspectPDF } from '../utils/pdfParser';
 import { t } from '../utils/translations';
+import { LordIcon } from './LordIcon';
 import {
   UploadCloud,
   File,
@@ -149,9 +150,11 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
           className="hidden"
         />
 
-        <UploadCloud className="w-10 h-10 text-cyan-400 mb-2 animate-bounce" />
+        <div className="mb-2">
+          <LordIcon name="upload" size={36} trigger="hover" colors="primary:#38bdf8,secondary:#94a3b8" />
+        </div>
         <h4 className="text-sm font-mono font-semibold text-slate-200">
-          {processing ? 'Processing Documents...' : t(lang, 'uploadDocuments')}
+          {processing ? 'Reading PDFs & computing content fingerprints...' : t(lang, 'uploadDocuments')}
         </h4>
         <p className="text-xs text-slate-400 mt-1">{t(lang, 'dragDropText')}</p>
         <span className="text-[11px] font-mono text-cyan-500/80 mt-2">
@@ -172,13 +175,15 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
         <div className="p-3 bg-amber-950/30 border border-amber-500/40 rounded-lg text-xs font-mono text-amber-300 space-y-1">
           <div className="flex items-center space-x-2 font-bold text-amber-200">
             <Copy className="w-4 h-4" />
-            <span>{t(lang, 'duplicateDetected')}</span>
+            <span>Duplicate Content Detected</span>
           </div>
-          <p className="text-[11px] text-amber-300/80">{t(lang, 'duplicateNotice')}</p>
+          <p className="text-[11px] text-amber-300/80">
+            Files with identical byte content cannot be matched to conflicting requirements.
+          </p>
           <ul className="list-disc pl-5 text-[11px] space-y-0.5">
             {Array.from(duplicateGroups.entries()).map(([hash, group]) => (
               <li key={hash}>
-                Hash <span className="font-bold">{hash.substring(0, 10)}...</span>: {group.map((f) => f.name).join(', ')}
+                Identical files: <span className="font-semibold text-amber-200">{group.map((f) => f.name).join(' ↔ ')}</span>
               </li>
             ))}
           </ul>
