@@ -1,0 +1,6 @@
+﻿{
+  "name": "web-3d-react-three-fiber",
+  "version": "1.0.0",
+  "description": "React Three Fiber Patterns covering Canvas, meshes, materials, lights, cameras, animation, events, physics, post-processing, and performance.",
+  "author": { "name": "agents-inc" }
+}

@@ -1,0 +1,6 @@
+﻿{
+  "name": "full-stack-threejs-skills",
+  "version": "1.0.0",
+  "description": "Full collection of 18 specialized Three.js skills including camera, controls, animation, geometry, lights, materials, post-processing, scenes, textures, and renderers.",
+  "author": { "name": "full-stack-skills" }
+}

@@ -1,0 +1,6 @@
+﻿{
+  "name": "threejs-ai-skills",
+  "version": "1.0.0",
+  "description": "Comprehensive Three.js AI skills collection covering core, geometry, materials, lighting, cameras, animation, shaders, post-processing, and performance for AI coding agents.",
+  "author": { "name": "alton47" }
+}

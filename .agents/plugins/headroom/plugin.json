@@ -1,0 +1,8 @@
+{
+  "name": "headroom",
+  "version": "0.37.0",
+  "description": "Context compression, token reduction, CCR retrieval, and memory optimization layer for AI agents.",
+  "author": {
+    "name": "Headroom Contributors"
+  }
+}

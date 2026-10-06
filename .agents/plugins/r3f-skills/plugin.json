@@ -1,0 +1,6 @@
+﻿{
+  "name": "r3f-skills",
+  "version": "1.0.0",
+  "description": "React Three Fiber skills focused on R3F patterns, ecosystem, animation, loaders, materials, physics, shaders, and textures.",
+  "author": { "name": "EnzeD" }
+}
